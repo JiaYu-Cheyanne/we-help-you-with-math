@@ -31,6 +31,8 @@ if prompt := st.chat_input("Ask a math question..."):
 import time
 from openai import RateLimitError
 
+response = None  # Initialize first
+
 max_retries = 3
 for attempt in range(max_retries):
     try:
@@ -40,14 +42,15 @@ for attempt in range(max_retries):
                 {"role": "system", "content": "You are a math tutor who teaches step-by-step using the Singapore MOE syllabus from Primary to JC2. Be friendly and concise."},
             ] + st.session_state.messages
         )
-        break  # Exit the loop if successful
+        break  # Successful response
     except RateLimitError:
         if attempt < max_retries - 1:
-            time.sleep(2 ** attempt)  # Wait: 1s, 2s, then 4s
+            time.sleep(2 ** attempt)
         else:
-            st.error("You're sending too many requests. Please try again later.")
+            st.error("You're sending too many requests. Please wait a bit and try again.")
             st.stop()
 
+if response:  # Only process reply if we have a response
     reply = response.choices[0].message.content
     st.session_state.messages.append({"role": "assistant", "content": reply})
 
