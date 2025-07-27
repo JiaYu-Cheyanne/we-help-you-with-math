@@ -63,12 +63,15 @@ if prompt := st.chat_input("Ask a math question..."):
 # Display chat history
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        if isinstance(msg["content"], list):  # handle image+text messages
-            for part in msg["content"]:
-                if part["type"] == "text":
-                    st.markdown(part["text"])
-                elif part["type"] == "image_url":
+        content = msg["content"]
+        if isinstance(content, list):
+            for part in content:
+                if part.get("type") == "text":
+                    st.markdown(part["text"], unsafe_allow_html=True)
+                elif part.get("type") == "image_url":
                     st.image(part["image_url"]["url"])
+        elif isinstance(content, str):
+            st.markdown(content, unsafe_allow_html=True)
 else:
     # Split by double line breaks for block separation
     blocks = msg["content"].split("\n\n")
