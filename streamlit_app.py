@@ -28,13 +28,25 @@ if prompt := st.chat_input("Ask a math question..."):
     user_msg = prompt + ("\n(Attached image included)" if image_base64 else "")
     st.session_state.messages.append({"role": "user", "content": user_msg})
 
-    # Request with new client syntax
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a math tutor who teaches step-by-step using the Singapore MOE syllabus from Primary to JC2. Be friendly and concise."},
-        ] + st.session_state.messages
-    )
+import time
+from openai import RateLimitError
+
+max_retries = 3
+for attempt in range(max_retries):
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a math tutor who teaches step-by-step using the Singapore MOE syllabus from Primary to JC2. Be friendly and concise."},
+            ] + st.session_state.messages
+        )
+        break  # Exit the loop if successful
+    except RateLimitError:
+        if attempt < max_retries - 1:
+            time.sleep(2 ** attempt)  # Wait: 1s, 2s, then 4s
+        else:
+            st.error("You're sending too many requests. Please try again later.")
+            st.stop()
 
     reply = response.choices[0].message.content
     st.session_state.messages.append({"role": "assistant", "content": reply})
