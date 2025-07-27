@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import base64
 from PIL import Image
 import io
@@ -7,8 +7,10 @@ import io
 st.set_page_config(page_title="We help you with math")
 st.title("🧮 We help you with math (MOE Syllabus)")
 
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Initialize OpenAI client with the new SDK
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
+# Initialize session messages
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -26,7 +28,8 @@ if prompt := st.chat_input("Ask a math question..."):
     user_msg = prompt + ("\n(Attached image included)" if image_base64 else "")
     st.session_state.messages.append({"role": "user", "content": user_msg})
 
-    response = openai.ChatCompletion.create(
+    # Request with new client syntax
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are a math tutor who teaches step-by-step using the Singapore MOE syllabus from Primary to JC2. Be friendly and concise."},
@@ -36,6 +39,7 @@ if prompt := st.chat_input("Ask a math question..."):
     reply = response.choices[0].message.content
     st.session_state.messages.append({"role": "assistant", "content": reply})
 
+# Display chat history
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
