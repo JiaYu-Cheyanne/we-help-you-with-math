@@ -45,7 +45,7 @@ if prompt := st.chat_input("Ask a math question..."):
             response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are a math tutor who teaches step-by-step using the Singapore MOE syllabus from Primary to JC2. Be friendly and concise."},
+                    {"role": "system", "content": "You are a math tutor who teaches step-by-step using the Singapore MOE syllabus from Primary to JC2. Be friendly and concise. Format all mathematical working in a clean, presentable way using markdown and LaTeX like ChatGPT."},
                 ] + st.session_state.messages
             )
             break
@@ -67,30 +67,41 @@ for msg in st.session_state.messages:
         if isinstance(content, list):
             for part in content:
                 if part.get("type") == "text":
-                    st.markdown(part["text"], unsafe_allow_html=True)
+                    blocks = part["text"].split("\n\n")
+                    for block in blocks:
+                        block = block.strip()
+                        if block.startswith("$$") and block.endswith("$$"):
+                            st.latex(block[2:-2])
+                        elif block.startswith(r"\[") and block.endswith(r"\]"):
+                            st.latex(block[2:-2])
+                        elif block.startswith("$") and block.endswith("$"):
+                            st.latex(block[1:-1])
+                        elif "\\begin" in block:
+                            st.latex(block)
+                        elif block.strip().startswith("```") and block.strip().endswith("```"):
+                            st.code(block.strip("`"), language="python")
+                        else:
+                            st.markdown(block)
                 elif part.get("type") == "image_url":
                     st.image(part["image_url"]["url"])
         elif isinstance(content, str):
-            st.markdown(content, unsafe_allow_html=True)
-else:
-    # Split by double line breaks for block separation
-    blocks = msg["content"].split("\n\n")
-    for block in blocks:
-        block = block.strip()
-        # Check for LaTeX-style blocks (boxed or centered)
-        if block.startswith("$$") and block.endswith("$$"):
-            st.latex(block[2:-2])
-        elif block.startswith(r"\[") and block.endswith(r"\]"):
-            st.latex(block[2:-2])
-        elif block.startswith("$") and block.endswith("$"):
-            st.latex(block[1:-1])
-        elif "\\begin" in block:  # multiline latex environments
-            st.latex(block)
-        elif block.strip().startswith("```") and block.strip().endswith("```"):  # handle code blocks
-            st.code(block.strip("`"), language="python")
-        else:
-            st.markdown(block)
+            blocks = content.split("\n\n")
+            for block in blocks:
+                block = block.strip()
+                if block.startswith("$$") and block.endswith("$$"):
+                    st.latex(block[2:-2])
+                elif block.startswith(r"\[") and block.endswith(r"\]"):
+                    st.latex(block[2:-2])
+                elif block.startswith("$") and block.endswith("$"):
+                    st.latex(block[1:-1])
+                elif "\\begin" in block:
+                    st.latex(block)
+                elif block.strip().startswith("```") and block.strip().endswith("```"):
+                    st.code(block.strip("`"), language="python")
+                else:
+                    st.markdown(block)
 
+# Example message for testing formatting
 st.session_state.messages.append({
     "role": "assistant",
     "content": """
