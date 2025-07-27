@@ -30,7 +30,7 @@ if prompt := st.chat_input("Ask a math question..."):
 
     # Request with new client syntax
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a math tutor who teaches step-by-step using the Singapore MOE syllabus from Primary to JC2. Be friendly and concise."},
         ] + st.session_state.messages
