@@ -69,5 +69,36 @@ for msg in st.session_state.messages:
                     st.markdown(part["text"])
                 elif part["type"] == "image_url":
                     st.image(part["image_url"]["url"])
+else:
+    # Split by double line breaks for block separation
+    blocks = msg["content"].split("\n\n")
+    for block in blocks:
+        block = block.strip()
+        # Check for LaTeX-style blocks (boxed or centered)
+        if block.startswith("$$") and block.endswith("$$"):
+            st.latex(block[2:-2])
+        elif block.startswith(r"\[") and block.endswith(r"\]"):
+            st.latex(block[2:-2])
+        elif block.startswith("$") and block.endswith("$"):
+            st.latex(block[1:-1])
+        elif "\\begin" in block:  # multiline latex environments
+            st.latex(block)
+        elif block.strip().startswith("```") and block.strip().endswith("```"):  # handle code blocks
+            st.code(block.strip("`"), language="python")
         else:
-            st.markdown(msg["content"])
+            st.markdown(block)
+
+st.session_state.messages.append({
+    "role": "assistant",
+    "content": """
+### 🧮 Integration Example
+
+Let:
+- $u = \\ln x$
+- $dv = x^n dx$
+
+Then:
+$$
+\\int x^n \\ln x \\, dx = \\frac{x^{n+1}}{n+1} \\ln x - \\frac{x^{n+1}}{(n+1)^2} + C
+$$
+"""})
